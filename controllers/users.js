@@ -4,7 +4,6 @@ const {
   NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
-  BadRequestError,
   handleErrors,
 } = require("../utils/errors");
 
@@ -13,14 +12,14 @@ module.exports.getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send({ data: users }))
     .catch((err) => {
-      if (err.status === BadRequestError) {
-        res
-          .status(BadRequestError)
-          .send({
-            message: "Переданы некорректные данные при создании пользователя",
-          });
+      if (err.status === BAD_REQUEST_ERROR) {
+        res.status(BAD_REQUEST_ERROR).send({
+          message: "Переданы некорректные данные при создании пользователя",
+        });
       } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: "Что-то пошло не так" });
+        res
+          .status(INTERNAL_SERVER_ERROR)
+          .send({ message: "Что-то пошло не так" });
       }
     });
 };
@@ -34,7 +33,12 @@ module.exports.getUser = (req, res) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      handleErrors(err, res);
+      console.log(err);
+      handleErrors({
+        err,
+        res,
+        messageOfNotFound: "Пользователь по указанному _id не найден",
+      });
     });
 };
 
@@ -43,22 +47,20 @@ module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
-    .catch(() => {
-      if (err.status === BadRequestError) {
-        res
-          .status(BadRequestError)
-          .send({
-            message: "Переданы некорректные данные при создании пользователя",
-          });
-      } else {
-        res.status(INTERNAL_SERVER_ERROR).send({ message: "Что-то пошло не так" });
-      }
+    .catch((err) => {
+      handleErrors({
+        err,
+        res,
+        messageOfNotFound: "Пользователь по указанному _id не найден",
+        messageOfBadRequest:
+          "Переданы некорректные данные при создании пользователя",
+      });
     });
 };
 
 module.exports.updateUser = (req, res) => {
   // Обновляет профиль
-  const id = req.params.id;
+  const id = req.user._id;
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     id,
@@ -73,13 +75,19 @@ module.exports.updateUser = (req, res) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      handleErrors(err, res);
+      handleErrors({
+        err,
+        res,
+        messageOfNotFound: "Пользователь с указанным _id не найден",
+        messageOfBadRequest:
+          "Переданы некорректные данные при обновлении профиля",
+      });
     });
 };
 
 module.exports.updateAvatar = (req, res) => {
   // Обновляет аватар
-  const id = req.params.id;
+  const id = req.user._id;
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     id,
@@ -94,6 +102,10 @@ module.exports.updateAvatar = (req, res) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      handleErrors(err, res);
+      handleErrors({ err,
+         res,
+         messageOfNotFound: "Пользователь с указанным _id не найден",
+         messageOfBadRequest:
+           "Переданы некорректные данные при обновлении профиля", });
     });
 };

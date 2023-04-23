@@ -7,28 +7,26 @@ const INTERNAL_SERVER_ERROR = 500;
 class NotFoundError extends Error {
   constructor(message) {
     super(message);
-    this.status = ERROR_NOT_FOUND;
+    this.status = NOT_FOUND_ERROR;
     this.name = NotFoundError;
   }
 }
 
-class BadRequestError extends Error {
-  constructor(message) {
-    super(message);
-    this.status = ERROR_NOT_FOUND;
-    this.name = BadRequestError;
-  }
-}
-
-
-const handleErrors = (err, res) => {
+const handleErrors = ({
+  err,
+  res,
+  messageOfNotFound = "Данные по переданному _id не найдены",
+  messageOfBadRequest = "Переданы некорректные данные",
+}) => {
   if (err instanceof NotFoundError) {
-    return res.status(NOT_FOUND_ERROR).send(err.message);
+    return res.status(NOT_FOUND_ERROR).send({ message: messageOfNotFound });
   }
   if (err instanceof CastError || err instanceof ValidationError) {
-    return res.status(BAD_REQUEST_ERROR).send(err.message);
+    return res.status(BAD_REQUEST_ERROR).send({ message: messageOfBadRequest });
   } else {
-    return res.status(INTERNAL_SERVER_ERROR).send("Что-то пошло не так");
+    return res
+      .status(INTERNAL_SERVER_ERROR)
+      .send({ message: "Что-то пошло не так" });
   }
 };
 
@@ -37,7 +35,5 @@ module.exports = {
   NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
-  BadRequestError,
   handleErrors,
 };
-
