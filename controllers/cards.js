@@ -1,6 +1,5 @@
 const Card = require("../models/card");
 const {
-  BAD_REQUEST_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
   handleErrors,
@@ -9,17 +8,12 @@ const {
 module.exports.getCards = (req, res) => {
   // Возвращает все карточки
   Card.find({})
+    .populate([["owner", "likes"]])
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => {
-      if (err.status === BAD_REQUEST_ERROR) {
-        res.status(BAD_REQUEST_ERROR).send({
-          message: "Переданы некорректные данные при создании карточки",
-        });
-      } else {
-        res
-          .status(INTERNAL_SERVER_ERROR)
-          .send({ message: "Что-то пошло не так" });
-      }
+    .catch(() => {
+      res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "Что-то пошло не так" });
     });
 };
 
@@ -49,7 +43,13 @@ module.exports.deleteCard = (req, res) => {
       res.send({ data: card });
     })
     .catch((err) => {
-      handleErrors({ err, res });
+      handleErrors({
+        err,
+        res,
+        messageOfBadRequest:
+          "Переданы некорректные данные при удалении карточки",
+        messageOfNotFound: "Передан несуществующий _id карточки",
+      });
     });
 };
 
@@ -68,7 +68,8 @@ module.exports.likeCard = (req, res) => {
         err,
         res,
         messageOfNotFound: "Передан несуществующий _id карточки",
-        messageOfBadRequest: "Переданы некорректные данные для постановки лайка.",
+        messageOfBadRequest:
+          "Переданы некорректные данные для постановки лайка.",
       });
     });
 };

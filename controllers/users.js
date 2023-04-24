@@ -1,6 +1,5 @@
 const User = require("../models/user");
 const {
-  BAD_REQUEST_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
   handleErrors,
@@ -10,16 +9,10 @@ module.exports.getUsers = (req, res) => {
   // Возвращает всех пользователей
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => {
-      if (err.status === BAD_REQUEST_ERROR) {
-        res.status(BAD_REQUEST_ERROR).send({
-          message: "Переданы некорректные данные при создании пользователя",
-        });
-      } else {
-        res
-          .status(INTERNAL_SERVER_ERROR)
-          .send({ message: "Что-то пошло не так" });
-      }
+    .catch(() => {
+      res
+        .status(INTERNAL_SERVER_ERROR)
+        .send({ message: "Что-то пошло не так" });
     });
 };
 
@@ -43,7 +36,7 @@ module.exports.createUser = (req, res) => {
   // Создаёт пользователя
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(201).send({ data: user }))
     .catch((err) => {
       handleErrors({
         err,

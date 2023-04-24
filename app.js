@@ -4,15 +4,17 @@ const mongoose = require("mongoose");
 
 const app = express();
 const bodyParser = require("body-parser");
-const userRouter = require("./routes/users");
-const cardRouter = require("./routes/cards");
+const { userRouter, cardRouter } = require("./routes/index");
+const {
+  NOT_FOUND_ERROR,
+} = require("./utils/errors");
 
 mongoose.connect("mongodb://127.0.0.1:27017/mestodb", {
   useNewUrlParser: true,
 });
 
 const { PORT = 3000 } = process.env;
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
@@ -23,15 +25,11 @@ app.use((req, res, next) => {
   next();
 });
 
-module.exports.createCard = (req) => {
-  console.log(req.user._id); // _id станет доступен
-};
-
-app.use(userRouter);
-app.use(cardRouter);
+app.use("/users", userRouter);
+app.use("/cards", cardRouter);
 
 app.use("*", (req, res) => {
-  res.status(404).send({ message: "ERROR 404" });
+  res.status(NOT_FOUND_ERROR).send({ message: "ERROR 404" });
 });
 
 app.listen(PORT, () => {
