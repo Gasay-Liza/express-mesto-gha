@@ -1,7 +1,6 @@
 const User = require("../models/user");
 const {
   BAD_REQUEST_ERROR,
-  NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
   handleErrors,
@@ -26,14 +25,12 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUser = (req, res) => {
   // Возвращает пользователя по _id
-  const UserId = req.params.UserId;
-  User.findById(UserId)
+  User.findById(req.params.UserId)
     .orFail(() => {
       throw new NotFoundError("Пользователь по указанному _id не найден");
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      console.log(err);
       handleErrors({
         err,
         res,
@@ -68,7 +65,7 @@ module.exports.updateUser = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    }
+    },
   )
     .orFail(() => {
       throw new NotFoundError("Пользователь с указанным _id не найден");
@@ -95,17 +92,19 @@ module.exports.updateAvatar = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    }
+    },
   )
     .orFail(() => {
       throw new NotFoundError("Пользователь с указанным _id не найден");
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      handleErrors({ err,
-         res,
-         messageOfNotFound: "Пользователь с указанным _id не найден",
-         messageOfBadRequest:
-           "Переданы некорректные данные при обновлении профиля", });
+      handleErrors({
+        err,
+        res,
+        messageOfNotFound: "Пользователь с указанным _id не найден",
+        messageOfBadRequest:
+          "Переданы некорректные данные при обновлении профиля",
+      });
     });
 };

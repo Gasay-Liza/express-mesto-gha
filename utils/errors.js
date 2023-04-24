@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const { CastError, ValidationError } = mongoose.Error;
 const BAD_REQUEST_ERROR = 400;
 const NOT_FOUND_ERROR = 404;
@@ -23,11 +24,10 @@ const handleErrors = ({
   }
   if (err instanceof CastError || err instanceof ValidationError) {
     return res.status(BAD_REQUEST_ERROR).send({ message: messageOfBadRequest });
-  } else {
-    return res
-      .status(INTERNAL_SERVER_ERROR)
-      .send({ message: "Что-то пошло не так" });
   }
+  return res
+    .status(INTERNAL_SERVER_ERROR)
+    .send({ message: "Что-то пошло не так" });
 };
 
 module.exports = {

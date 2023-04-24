@@ -1,7 +1,6 @@
 const Card = require("../models/card");
 const {
   BAD_REQUEST_ERROR,
-  NOT_FOUND_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
   handleErrors,
@@ -42,13 +41,11 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   // Удаляет карточку
-  const cardId = req.params.cardId;
-  Card.findByIdAndRemove(cardId)
+  Card.findByIdAndRemove(req.params.cardId)
     .orFail(() => {
       throw new NotFoundError("Карточка с указанным _id не найдена");
     })
     .then((card) => {
-      console.log(card);
       res.send({ data: card });
     })
     .catch((err) => {
@@ -57,11 +54,10 @@ module.exports.deleteCard = (req, res) => {
 };
 
 module.exports.likeCard = (req, res) => {
-  const cardId = req.params.cardId;
   Card.findByIdAndUpdate(
-    cardId,
-    { $addToSet: { likes: cardId } }, // добавить _id в массив, если его там нет
-    { new: true }
+    req.params.cardId,
+    { $addToSet: { likes: req.params.cardId } }, // добавить _id в массив, если его там нет
+    { new: true },
   )
     .orFail(() => {
       throw new NotFoundError("Передан несуществующий _id карточки");
@@ -78,11 +74,10 @@ module.exports.likeCard = (req, res) => {
 };
 
 module.exports.dislikeCard = (req, res) => {
-  const cardId = req.params.cardId;
   Card.findByIdAndUpdate(
-    cardId,
+    req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
-    { new: true }
+    { new: true },
   )
     .orFail(() => {
       throw new NotFoundError("Переданы некорректные данные для снятия лайка");

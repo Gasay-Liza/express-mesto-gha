@@ -14,5 +14,3 @@ userRouter.patch("/users/me", updateUser); // Обновляет профиль
 userRouter.patch("/users/me/avatar", updateAvatar); // Обновляет аватар
 
 module.exports = userRouter;
-
-const handleErrors = (err, res) => {};
