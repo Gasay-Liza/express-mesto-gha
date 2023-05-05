@@ -12,7 +12,7 @@ const {
   createUser,
   login,
 } = require("./controllers/users");
-const auth = require("./middlewares/auth");
+// const auth = require("./middlewares/auth");
 
 mongoose.connect("mongodb://127.0.0.1:27017/mestodb", {
   useNewUrlParser: true,
@@ -22,18 +22,10 @@ const { PORT = 3000 } = process.env;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: "6443c7fd31929ff7fe677697", // вставьте сюда _id созданного в предыдущем пункте пользователя
-  };
-
-  next();
-});
-
 app.post("/signup", createUser);
 app.post("/signin", login);
 
-app.use(auth);
+// app.use(auth);
 
 app.use("/users", userRouter);
 app.use("/cards", cardRouter);

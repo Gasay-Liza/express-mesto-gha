@@ -36,7 +36,17 @@ module.exports.getUser = (req, res) => {
 
 module.exports.createUser = (req, res) => {
   // Создаёт пользователя
-  const { name, about, avatar, email, password } = req.body;
+  // if (req.body) {
+  //   res.status(400).send({ error: "Invalid request body" });
+  //   return;
+  // }
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  // if (!email || !password) {
+  //   res.status(400).send({ error: "Email or password is required" });
+  //   return;
+  // }
   bcrypt.hash(password, 10).then((hash) => {
     User.create({
       name,
@@ -63,9 +73,14 @@ module.exports.login = (req, res) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id },
+      if (!user) {
+        return Promise.reject(new Error("Неправильные почта или пароль"));
+      }
+      const token = jwt.sign(
+        { _id: user._id },
         "some-secret-key",
-        { expiresIn: "7d" });
+        { expiresIn: "7d" },
+      );
       res.send({ token });
     })
     .catch((err) => {
@@ -83,7 +98,7 @@ module.exports.updateUser = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    }
+    },
   )
     .orFail(() => {
       throw new NotFoundError("Пользователь с указанным _id не найден");
@@ -110,7 +125,7 @@ module.exports.updateAvatar = (req, res) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    }
+    },
   )
     .orFail(() => {
       throw new NotFoundError("Пользователь с указанным _id не найден");
