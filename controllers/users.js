@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 const User = require("../models/user");
 const {
   INTERNAL_SERVER_ERROR,
@@ -34,15 +35,29 @@ module.exports.getUser = (req, res) => {
     });
 };
 
+module.exports.getUserMe = (req, res) => {
+  // Возвращает пользователя по _id
+  console.log("req", req);
+  User.findById(req.user._id)
+    .orFail(() => {
+      throw new NotFoundError("Пользователь не найден");
+    })
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      console.log(err)
+      res
+        .status(404)
+        .send({ message: err.message });
+    });
+};
+
 module.exports.createUser = (req, res) => {
   // Создаёт пользователя
-  // if (req.body) {
+  // if (!req.body) {
   //   res.status(400).send({ error: "Invalid request body" });
   //   return;
   // }
-  const {
-    name, about, avatar, email, password,
-  } = req.body;
+  const { name, about, avatar, email, password } = req.body;
   // if (!email || !password) {
   //   res.status(400).send({ error: "Email or password is required" });
   //   return;
@@ -69,19 +84,34 @@ module.exports.createUser = (req, res) => {
 };
 
 module.exports.login = (req, res) => {
-  // Создаёт пользователя
+  //Создаёт пользователя
+  if (!req.body) {
+    res.status(400).send({ error: "Invalid request body" });
+    return;
+  }
   const { email, password } = req.body;
-  return User.findUserByCredentials(email, password)
+
+  if (!email || !password) {
+    res.status(400).send({ error: "Email or password is required" });
+    return;
+  }
+  User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
-        return Promise.reject(new Error("Неправильные почта или пароль"));
-      }
+      // создадим токен
+      const { NODE_ENV, JWT_SECRET } = process.env;
       const token = jwt.sign(
         { _id: user._id },
-        "some-secret-key",
+        NODE_ENV === "production" ? JWT_SECRET : "dev-secret",
         { expiresIn: "7d" },
       );
-      res.send({ token });
+      // вернём токен
+      res
+        .cookie("jwt", token, {
+          // token - наш JWT токен, который мы отправляем
+          maxAge: 3600000 * 24 * 7,
+          httpOnly: true,
+        });
+      res.status(200).send({ message: "Login succesful" });
     })
     .catch((err) => {
       res.status(401).send({ message: err.message });
