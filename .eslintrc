@@ -15,7 +15,7 @@
     "import/no-extraneous-dependencies": [
       "error",
       {
-        "dependencies": true
+        "dependencies": false
       }
     ]
   }

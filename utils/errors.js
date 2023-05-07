@@ -38,6 +38,8 @@ const handleErrors = ({
   res,
   next,
 }) => {
+  console.log("res","res")
+  console.log("err","err")
   if (err instanceof NotFoundError) {
     return res.status(NOT_FOUND_ERROR).send({ message: "Данные по переданному _id не найдены" });
   }
