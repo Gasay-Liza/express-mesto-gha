@@ -5,6 +5,7 @@ const User = require("../models/user");
 const {
   INTERNAL_SERVER_ERROR,
   UNAUTHORIZED_ERROR,
+  CONFLICT_ERROR,
   BAD_REQUEST_ERROR,
   NotFoundError,
 } = require("../utils/errors");
@@ -68,6 +69,11 @@ module.exports.createUser = (req, res, next) => {
     })
       .then((user) => res.status(201).send({ data: user }))
       .catch((err) => {
+        if (err.code === 1100) {
+          res
+            .status(CONFLICT_ERROR)
+            .send({ error: "Пользователь с таким email уже существует" });
+        }
         next(err);
       });
   });
@@ -131,7 +137,7 @@ module.exports.updateUser = (req, res, next) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      next(err)
+      next(err);
     });
 };
 
@@ -149,7 +155,7 @@ module.exports.updateAvatar = (req, res, next) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    },
+    }
   )
     .orFail(() => {
       throw new NotFoundError("Пользователь с указанным _id не найден");

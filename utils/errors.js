@@ -4,6 +4,7 @@ const { CastError, ValidationError } = mongoose.Error;
 const BAD_REQUEST_ERROR = 400;
 const UNAUTHORIZED_ERROR = 401;
 const NOT_FOUND_ERROR = 404;
+const CONFLICT_ERROR = 409;
 const INTERNAL_SERVER_ERROR = 500;
 
 class NotFoundError extends Error {
@@ -48,6 +49,7 @@ module.exports = {
   BAD_REQUEST_ERROR,
   UNAUTHORIZED_ERROR,
   NOT_FOUND_ERROR,
+  CONFLICT_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
   handleErrors,
