@@ -1,4 +1,5 @@
 const cardRouter = require("express").Router();
+const { celebrate, Joi } = require("celebrate");
 const {
   getCards,
   createCard,
@@ -6,7 +7,6 @@ const {
   likeCard,
   dislikeCard,
 } = require("../controllers/cards");
-const { celebrate, Joi } = require('celebrate');
 
 cardRouter.get("/", getCards); // Возвращает все карточки
 cardRouter.post("/", createCard); // Создаёт карточку

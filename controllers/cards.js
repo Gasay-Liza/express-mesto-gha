@@ -59,7 +59,7 @@ module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.params.cardId } }, // добавить _id в массив, если его там нет
-    { new: true }
+    { new: true },
   )
     .orFail(() => {
       throw new NotFoundError("Передан несуществующий _id карточки");

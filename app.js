@@ -1,8 +1,8 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
-const { handleErrors } = require("./utils/errors");
 const { celebrate, Joi } = require("celebrate");
+const { handleErrors } = require("./utils/errors");
 
 const app = express();
 

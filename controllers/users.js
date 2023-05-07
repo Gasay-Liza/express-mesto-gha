@@ -102,7 +102,7 @@ module.exports.login = (req, res, next) => {
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === "production" ? JWT_SECRET : "dev-secret",
-        { expiresIn: "7d" }
+        { expiresIn: "7d" },
       );
       // вернём токен
       res.cookie("jwt", token, {
@@ -157,7 +157,7 @@ module.exports.updateAvatar = (req, res, next) => {
     {
       new: true, // обработчик then получит на вход обновлённую запись
       runValidators: true, // данные будут валидированы перед изменением
-    }
+    },
   )
     .orFail(() => {
       throw new NotFoundError("Пользователь с указанным _id не найден");

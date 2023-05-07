@@ -1,4 +1,5 @@
 const userRouter = require("express").Router();
+const { celebrate, Joi } = require("celebrate");
 const {
   getUsers,
   getUser,
@@ -6,7 +7,6 @@ const {
   updateAvatar,
   getUserMe,
 } = require("../controllers/users");
-const { celebrate, Joi } = require('celebrate');
 
 userRouter.get("/", getUsers); // Возвращает всех пользователей
 userRouter.patch("/me", celebrate({
