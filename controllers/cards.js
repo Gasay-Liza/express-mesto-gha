@@ -1,39 +1,41 @@
 const Card = require("../models/card");
 const {
   INTERNAL_SERVER_ERROR,
+  BAD_REQUEST_ERROR,
   NotFoundError,
   handleErrors,
 } = require("../utils/errors");
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   // Возвращает все карточки
   Card.find({})
     .populate([["owner", "likes"]])
     .then((cards) => res.send({ data: cards }))
-    .catch(() => {
-      res
-        .status(INTERNAL_SERVER_ERROR)
-        .send({ message: "Что-то пошло не так" });
+    .catch((err) => {
+      next(err);
     });
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   // Создаёт карточку
 
   const { name, link } = req.body;
+
+  if (!name || !link) {
+    res
+      .status(BAD_REQUEST_ERROR)
+      .send({ error: "Переданы некорректные данные при создании карточки" });
+    return;
+  }
+
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      handleErrors({
-        err,
-        res,
-        messageOfBadRequest:
-          "Переданы некорректные данные при создании карточки",
-      });
+      next(err);
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   // Удаляет карточку
   Card.findByIdAndRemove(req.params.cardId)
     .orFail(() => {
@@ -43,17 +45,11 @@ module.exports.deleteCard = (req, res) => {
       res.send({ data: card });
     })
     .catch((err) => {
-      handleErrors({
-        err,
-        res,
-        messageOfBadRequest:
-          "Переданы некорректные данные при удалении карточки",
-        messageOfNotFound: "Передан несуществующий _id карточки",
-      });
+      next(err);
     });
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.params.cardId } }, // добавить _id в массив, если его там нет
@@ -64,17 +60,11 @@ module.exports.likeCard = (req, res) => {
     })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      handleErrors({
-        err,
-        res,
-        messageOfNotFound: "Передан несуществующий _id карточки",
-        messageOfBadRequest:
-          "Переданы некорректные данные для постановки лайка.",
-      });
+      next(err);
     });
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
@@ -85,11 +75,6 @@ module.exports.dislikeCard = (req, res) => {
     })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      handleErrors({
-        err,
-        res,
-        messageOfNotFound: "Передан несуществующий _id карточки",
-        messageOfBadRequest: "Переданы некорректные данные для снятия лайка.",
-      });
+      next(err);
     });
 };

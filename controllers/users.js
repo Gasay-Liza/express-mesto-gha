@@ -4,8 +4,9 @@ require("dotenv").config();
 const User = require("../models/user");
 const {
   INTERNAL_SERVER_ERROR,
+  UNAUTHORIZED_ERROR,
+  BAD_REQUEST_ERROR,
   NotFoundError,
-  handleErrors,
 } = require("../utils/errors");
 
 module.exports.getUsers = (req, res) => {
@@ -19,49 +20,44 @@ module.exports.getUsers = (req, res) => {
     });
 };
 
-module.exports.getUser = (req, res) => {
+module.exports.getUser = (req, res, next) => {
   // Возвращает пользователя по _id
+  console.log(req.params.UserId);
   User.findById(req.params.UserId)
     .orFail(() => {
       throw new NotFoundError("Пользователь по указанному _id не найден");
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      handleErrors({
-        err,
-        res,
-        messageOfNotFound: "Пользователь по указанному _id не найден",
-      });
+      next(err);
     });
 };
 
-module.exports.getUserMe = (req, res) => {
+module.exports.getUserMe = (req, res, next) => {
   // Возвращает пользователя по _id
-  console.log("req", req);
   User.findById(req.user._id)
     .orFail(() => {
       throw new NotFoundError("Пользователь не найден");
     })
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.status(200).send({ data: user }))
     .catch((err) => {
-      console.log(err)
-      res
-        .status(404)
-        .send({ message: err.message });
+      next(err);
     });
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   // Создаёт пользователя
-  // if (!req.body) {
-  //   res.status(400).send({ error: "Invalid request body" });
-  //   return;
-  // }
+  if (!req.body) {
+    res.status(BAD_REQUEST_ERROR).send({ error: "Invalid request body" });
+    return;
+  }
   const { name, about, avatar, email, password } = req.body;
-  // if (!email || !password) {
-  //   res.status(400).send({ error: "Email or password is required" });
-  //   return;
-  // }
+  if (!email || !password) {
+    res
+      .status(BAD_REQUEST_ERROR)
+      .send({ error: "Email or password is required" });
+    return;
+  }
   bcrypt.hash(password, 10).then((hash) => {
     User.create({
       name,
@@ -72,27 +68,23 @@ module.exports.createUser = (req, res) => {
     })
       .then((user) => res.status(201).send({ data: user }))
       .catch((err) => {
-        handleErrors({
-          err,
-          res,
-          messageOfNotFound: "Пользователь по указанному _id не найден",
-          messageOfBadRequest:
-            "Переданы некорректные данные при создании пользователя",
-        });
+        next(err);
       });
   });
 };
 
-module.exports.login = (req, res) => {
-  //Создаёт пользователя
+module.exports.login = (req, res, next) => {
+  // Создаёт пользователя
   if (!req.body) {
-    res.status(400).send({ error: "Invalid request body" });
+    res.status(BAD_REQUEST_ERROR).send({ error: "Invalid request body" });
     return;
   }
   const { email, password } = req.body;
 
   if (!email || !password) {
-    res.status(400).send({ error: "Email or password is required" });
+    res
+      .status(BAD_REQUEST_ERROR)
+      .send({ error: "Email or password is required" });
     return;
   }
   User.findUserByCredentials(email, password)
@@ -102,26 +94,30 @@ module.exports.login = (req, res) => {
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === "production" ? JWT_SECRET : "dev-secret",
-        { expiresIn: "7d" },
+        { expiresIn: "7d" }
       );
       // вернём токен
-      res
-        .cookie("jwt", token, {
-          // token - наш JWT токен, который мы отправляем
-          maxAge: 3600000 * 24 * 7,
-          httpOnly: true,
-        });
+      res.cookie("jwt", token, {
+        // token - наш JWT токен, который мы отправляем
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      });
       res.status(200).send({ message: "Login succesful" });
     })
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      res.status(UNAUTHORIZED_ERROR).send({ message: err.message });
+      next(err);
     });
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   // Обновляет профиль
   const id = req.user._id;
   const { name, about } = req.body;
+  if (!req.body) {
+    res.status(BAD_REQUEST_ERROR).send({ error: "Invalid request body" });
+    return;
+  }
   User.findByIdAndUpdate(
     id,
     { name, about },
@@ -135,19 +131,17 @@ module.exports.updateUser = (req, res) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      handleErrors({
-        err,
-        res,
-        messageOfNotFound: "Пользователь с указанным _id не найден",
-        messageOfBadRequest:
-          "Переданы некорректные данные при обновлении профиля",
-      });
+      next(err)
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   // Обновляет аватар
   const id = req.user._id;
+  if (!req.body) {
+    res.status(BAD_REQUEST_ERROR).send({ error: "Invalid request body" });
+    return;
+  }
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     id,
@@ -162,12 +156,6 @@ module.exports.updateAvatar = (req, res) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      handleErrors({
-        err,
-        res,
-        messageOfNotFound: "Пользователь с указанным _id не найден",
-        messageOfBadRequest:
-          "Переданы некорректные данные при обновлении профиля",
-      });
+      next(err);
     });
 };
