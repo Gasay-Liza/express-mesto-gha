@@ -30,6 +30,7 @@ module.exports.getUser = (req, res, next) => {
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
+      console.log(next)
       next(err);
     });
 };
@@ -74,7 +75,7 @@ module.exports.createUser = (req, res, next) => {
         if (err.code === 11000) {
           res
             .status(CONFLICT_ERROR)
-            .send({ error: "Пользователь с таким email уже существует" });
+            .send({ message: "Пользователь с таким email уже существует" });
         }
         next(err);
       });

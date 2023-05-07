@@ -3,7 +3,7 @@ const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const { celebrate, Joi } = require("celebrate");
 const { errors } = require('celebrate');
-const { handleErrors } = require("./utils/errors");
+const { NotFoundError, handleErrors } = require("./utils/errors");
 
 const app = express();
 
@@ -47,7 +47,7 @@ app.use("/users", auth, userRouter);
 app.use("/cards", auth, cardRouter);
 
 app.use("*", (req, res) => {
-  res.status(NOT_FOUND_ERROR).send({ message: "ERROR 404" });
+  throw new NotFoundError("Ошибка 404");
 });
 app.use(errors());
 app.use(handleErrors);
