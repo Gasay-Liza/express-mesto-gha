@@ -52,7 +52,9 @@ module.exports.createUser = (req, res, next) => {
     res.status(BAD_REQUEST_ERROR).send({ error: "Invalid request body" });
     return;
   }
-  const { name, about, avatar, email, password } = req.body;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
   if (!email || !password) {
     res
       .status(BAD_REQUEST_ERROR)
@@ -69,7 +71,7 @@ module.exports.createUser = (req, res, next) => {
     })
       .then((user) => res.status(201).send({ data: user }))
       .catch((err) => {
-        if (err.code === 1100) {
+        if (err.code === 11000) {
           res
             .status(CONFLICT_ERROR)
             .send({ error: "Пользователь с таким email уже существует" });

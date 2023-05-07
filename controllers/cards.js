@@ -1,9 +1,8 @@
 const Card = require("../models/card");
 const {
-  INTERNAL_SERVER_ERROR,
   BAD_REQUEST_ERROR,
   NotFoundError,
-  handleErrors,
+  ForbidenError,
 } = require("../utils/errors");
 
 module.exports.getCards = (req, res, next) => {
@@ -37,15 +36,22 @@ module.exports.createCard = (req, res, next) => {
 
 module.exports.deleteCard = (req, res, next) => {
   // Удаляет карточку
-  Card.findByIdAndRemove(req.params.cardId)
-    .orFail(() => {
-      throw new NotFoundError("Карточка с указанным _id не найдена");
-    })
-    .then((card) => {
-      res.send({ data: card });
-    })
-    .catch((err) => {
-      next(err);
+  Card.findById(req.params.cardId)
+    .orFail(new NotFoundError("Карточка с указанным _id не найдена."))
+    .then((data) => {
+      if (!(req.user._id === data.owner.toString())) {
+        throw new ForbidenError("Недостаточно прав для удаления карточки");
+      }
+      return Card.findByIdAndRemove(req.params.cardId)
+        .orFail(() => {
+          throw new NotFoundError("Карточка с указанным _id не найдена");
+        })
+        .then((card) => {
+          res.send({ data: card });
+        })
+        .catch((err) => {
+          next(err);
+        });
     });
 };
 
@@ -53,7 +59,7 @@ module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.params.cardId } }, // добавить _id в массив, если его там нет
-    { new: true },
+    { new: true }
   )
     .orFail(() => {
       throw new NotFoundError("Передан несуществующий _id карточки");

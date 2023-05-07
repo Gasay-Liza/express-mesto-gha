@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const { CastError, ValidationError } = mongoose.Error;
 const BAD_REQUEST_ERROR = 400;
 const UNAUTHORIZED_ERROR = 401;
+const FORBIDEN_ERROR = 403;
 const NOT_FOUND_ERROR = 404;
 const CONFLICT_ERROR = 409;
 const INTERNAL_SERVER_ERROR = 500;
@@ -23,6 +24,14 @@ class UnauthorizedError extends Error {
   }
 }
 
+class ForbidenError extends Error {
+  constructor(message) {
+    super(message);
+    this.status = FORBIDEN_ERROR;
+    this.name = "ForbidenError";
+  }
+}
+
 const handleErrors = ({
   err,
   req,
@@ -40,6 +49,11 @@ const handleErrors = ({
       .status(UNAUTHORIZED_ERROR)
       .send({ message: "Ошибка авторизации" });
   }
+  if (err instanceof ForbidenError) {
+    return res
+      .status(FORBIDEN_ERROR)
+      .send({ message: "Недостаточно прав" });
+  }
   return res
     .status(INTERNAL_SERVER_ERROR)
     .send({ message: "Что-то пошло не так" });
@@ -48,9 +62,11 @@ const handleErrors = ({
 module.exports = {
   BAD_REQUEST_ERROR,
   UNAUTHORIZED_ERROR,
+  FORBIDEN_ERROR,
   NOT_FOUND_ERROR,
   CONFLICT_ERROR,
   INTERNAL_SERVER_ERROR,
   NotFoundError,
+  ForbidenError,
   handleErrors,
 };
