@@ -2,13 +2,12 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const { celebrate, Joi } = require("celebrate");
-const { errors } = require('celebrate');
+const { errors } = require("celebrate");
 const { NotFoundError, handleErrors } = require("./utils/errors");
 
 const app = express();
 
 const { userRouter, cardRouter } = require("./routes/index");
-const { NOT_FOUND_ERROR } = require("./utils/errors");
 const { createUser, login } = require("./controllers/users");
 const auth = require("./middlewares/auth");
 
@@ -46,12 +45,20 @@ app.post("/signin", celebrate({
 app.use("/users", auth, userRouter);
 app.use("/cards", auth, cardRouter);
 
-app.use("*", (req, res) => {
+app.use("*", () => {
   throw new NotFoundError("Ошибка 404");
 });
 app.use(errors());
-app.use(handleErrors);
-
+app.use((
+  err,
+  req,
+  res,
+  next,
+) => {
+  handleErrors({
+    err, req, res, next,
+  });
+});
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}!`);
 });

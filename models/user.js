@@ -60,7 +60,7 @@ userSchema.statics.findUserByCredentials = function (email, password) {
       // не нашёлся — отклоняем промис
       if (!user) {
         return Promise.reject(
-          new UnauthorizedError("Неправильные почта или пароль")
+          new UnauthorizedError("Неправильные почта или пароль"),
         );
       }
       // нашёлся — сравниваем хеши

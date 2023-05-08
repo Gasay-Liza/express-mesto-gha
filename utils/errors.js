@@ -34,9 +34,7 @@ class ForbidenError extends Error {
 
 const handleErrors = ({
   err,
-  req,
   res,
-  next,
 }) => {
   if (err instanceof NotFoundError) {
     return res.status(NOT_FOUND_ERROR).send({ message: "Данные по переданному _id не найдены" });

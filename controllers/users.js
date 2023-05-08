@@ -23,14 +23,12 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUser = (req, res, next) => {
   // Возвращает пользователя по _id
-  console.log(req.params.UserId);
   User.findById(req.params.UserId)
     .orFail(() => {
       throw new NotFoundError("Пользователь по указанному _id не найден");
     })
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      console.log(next)
       next(err);
     });
 };
