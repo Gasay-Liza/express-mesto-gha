@@ -1,17 +1,14 @@
-const express = require("express");
-const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose");
-const { celebrate, Joi } = require("celebrate");
-const { errors } = require("celebrate");
-const { NotFoundError, handleErrors } = require("./utils/errors");
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
+const { errors } = require('celebrate');
+const handlerError = require('./middlewares/handlerError');
 
 const app = express();
 
-const { userRouter, cardRouter } = require("./routes/index");
-const { createUser, login } = require("./controllers/users");
-const auth = require("./middlewares/auth");
+const { router } = require('./routes/index');
 
-mongoose.connect("mongodb://127.0.0.1:27017/mestodb", {
+mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
 });
 
@@ -20,45 +17,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.post(
-  "/signup",
-  celebrate({
-    body: Joi.object().keys({
-      name: Joi.string().min(2).max(30),
-      about: Joi.string().min(2).max(30),
-      avatar: Joi.string().pattern(
-        /http[s]?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/,
-      ),
-      email: Joi.string().required().email(),
-      password: Joi.string().required(),
-    }),
-  }),
-  createUser,
-);
-app.post("/signin", celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().email().required(),
-    password: Joi.string().required(),
-  }),
-}), login);
+app.use(router);
 
-app.use("/users", auth, userRouter);
-app.use("/cards", auth, cardRouter);
-
-app.use("*", () => {
-  throw new NotFoundError("Ошибка 404");
-});
-app.use(errors());
-app.use((
-  err,
-  req,
-  res,
-  next,
-) => {
-  handleErrors({
-    err, req, res, next,
+router.use(errors());
+router.use((err, req, res, next) => {
+  handlerError({
+    err,
+    req,
+    res,
+    next,
   });
 });
+
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}!`);
 });

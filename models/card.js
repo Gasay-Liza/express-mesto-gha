@@ -1,4 +1,5 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const validator = require('validator');
 
 const cardSchema = new mongoose.Schema(
   {
@@ -13,17 +14,22 @@ const cardSchema = new mongoose.Schema(
       //  ссылка на картинку
       type: String,
       required: true,
+      validate: {
+        validator: (string) => {
+          validator.isURL(string);
+        },
+      },
     },
     owner: {
       // сылка на модель автора карточки
       type: mongoose.Schema.Types.ObjectId, // тип - id
-      ref: "user",
+      ref: 'user',
       required: true,
     },
     likes: {
       // список лайкнувших пост пользователей
       type: [mongoose.Schema.Types.ObjectId], // тип - id
-      ref: "user",
+      ref: 'user',
       default: [], // по умолчанию — пустой массив
     },
     createdAt: {
@@ -35,4 +41,4 @@ const cardSchema = new mongoose.Schema(
   { versionKey: false },
 );
 
-module.exports = mongoose.model("card", cardSchema);
+module.exports = mongoose.model('card', cardSchema);

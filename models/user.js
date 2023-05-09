@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const validator = require("validator");
-const { UnauthorizedError } = require("../utils/errors");
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const validator = require('validator');
+const { UnauthorizedError } = require('../errors/index');
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
       // у пользователя есть имя — опишем требования к имени в схеме:
       type: String, // name - это строка
       required: false,
-      default: "Жак-Ив Кусто",
+      default: 'Жак-Ив Кусто',
       minlength: 2, // минимальная длина имени — 2 символа
       maxlength: 30, // а максимальная — 30 символов
     },
@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
       // информация о пользователе
       type: String,
       required: false,
-      default: "Исследователь",
+      default: 'Исследователь',
       minlength: 2,
       maxlength: 30,
     },
@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
       default:
-        "https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png",
+        'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
       validate: {
         validator: (string) => {
           validator.isURL(string);
@@ -55,19 +55,19 @@ const userSchema = new mongoose.Schema(
 userSchema.statics.findUserByCredentials = function (email, password) {
   // попытаемся найти пользователя по почте
   return this.findOne({ email })
-    .select("+password") // this — это модель User
+    .select('+password') // this — это модель User
     .then((user) => {
       // не нашёлся — отклоняем промис
       if (!user) {
         return Promise.reject(
-          new UnauthorizedError("Неправильные почта или пароль"),
+          new UnauthorizedError('Неправильные почта или пароль'),
         );
       }
       // нашёлся — сравниваем хеши
       return bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
           return Promise.reject(
-            new UnauthorizedError("Неправильные почта или пароль"),
+            new UnauthorizedError('Неправильные почта или пароль'),
           );
         }
 
@@ -76,4 +76,4 @@ userSchema.statics.findUserByCredentials = function (email, password) {
     });
 };
 
-module.exports = mongoose.model("user", userSchema);
+module.exports = mongoose.model('user', userSchema);

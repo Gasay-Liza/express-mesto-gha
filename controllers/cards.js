@@ -1,18 +1,16 @@
-const Card = require("../models/card");
+const Card = require('../models/card');
 const {
-  BAD_REQUEST_ERROR,
   NotFoundError,
-  ForbidenError,
-} = require("../utils/errors");
+  ForbiddenError,
+  BadRequestError,
+} = require('../errors/index');
 
 module.exports.getCards = (req, res, next) => {
   // Возвращает все карточки
   Card.find({})
-    .populate([["owner", "likes"]])
+    .populate([['owner', 'likes']])
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
 };
 
 module.exports.createCard = (req, res, next) => {
@@ -20,42 +18,35 @@ module.exports.createCard = (req, res, next) => {
 
   const { name, link } = req.body;
 
-  if (!name || !link) {
-    res
-      .status(BAD_REQUEST_ERROR)
-      .send({ error: "Переданы некорректные данные при создании карточки" });
-    return;
-  }
-
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Некорректные данные при создании карточки'));
+      } else {
+        next(err);
+      }
     });
 };
 
 module.exports.deleteCard = (req, res, next) => {
   // Удаляет карточку
   Card.findById(req.params.cardId)
-    .orFail(new NotFoundError("Карточка с указанным _id не найдена."))
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
     .then((data) => {
       if (!(req.user._id === data.owner.toString())) {
-        throw new ForbidenError("Недостаточно прав для удаления карточки");
+        throw new ForbiddenError('Недостаточно прав для удаления карточки');
       }
       return Card.findByIdAndRemove(req.params.cardId)
         .orFail(() => {
-          throw new NotFoundError("Карточка с указанным _id не найдена");
+          throw new NotFoundError('Карточка с указанным _id не найдена');
         })
         .then((card) => {
           res.send({ data: card });
         })
-        .catch((err) => {
-          next(err);
-        });
+        .catch(next);
     })
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
 };
 
 module.exports.likeCard = (req, res, next) => {
@@ -65,12 +56,10 @@ module.exports.likeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFoundError("Передан несуществующий _id карточки");
+      throw new NotFoundError('Передан несуществующий _id карточки');
     })
     .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
 };
 
 module.exports.dislikeCard = (req, res, next) => {
@@ -80,10 +69,8 @@ module.exports.dislikeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFoundError("Переданы некорректные данные для снятия лайка");
+      throw new NotFoundError('Переданы некорректные данные для снятия лайка');
     })
     .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      next(err);
-    });
+    .catch(next);
 };
