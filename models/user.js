@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
       unique: true,
       validate: {
         validator: (string) => {
-          validator.isEmail(string);
+          validator.isEmail(string); // валидация email
         },
       },
     },

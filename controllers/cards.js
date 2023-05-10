@@ -31,13 +31,14 @@ module.exports.createCard = (req, res, next) => {
 
 module.exports.deleteCard = (req, res, next) => {
   // Удаляет карточку
-  Card.findById(req.params.cardId)
-    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
+  Card.findById(req.params.cardId) // находим карточку по id
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.')) // если не удалось найти по id
     .then((data) => {
       if (!(req.user._id === data.owner.toString())) {
+        // проверяем можем ли мы ее удалить (владелец карточки и юзер профиля один и тот же?)
         throw new ForbiddenError('Недостаточно прав для удаления карточки');
       }
-      return Card.findByIdAndRemove(req.params.cardId)
+      return Card.findByIdAndRemove(req.params.cardId) // находим карточку по id и удаляем
         .orFail(() => {
           throw new NotFoundError('Карточка с указанным _id не найдена');
         })
