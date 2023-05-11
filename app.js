@@ -3,6 +3,7 @@ const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const { errors } = require('celebrate');
 const handlerError = require('./middlewares/handlerError');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const app = express();
 
@@ -17,9 +18,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+app.use(requestLogger); // подключаем логгер запросов
+
 app.use(router);
 
+app.use(errorLogger); // подключаем логгер ошибок
+
 router.use(errors());
+
+// централизованный обработчик ошибок
 router.use((err, req, res, next) => {
   handlerError({
     err,
